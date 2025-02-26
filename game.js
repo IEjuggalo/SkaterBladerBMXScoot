@@ -32,7 +32,7 @@ character.position.y = 1;
 
 // Adjust camera to follow the character
 camera.position.set(0, 5, 10);
-camera.lookAt(0, 1, 0);
+camera.lookAt(character.position);
 
 // Create an infinite floor
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
@@ -93,6 +93,10 @@ function animate() {
 
     // Update character position
     character.position.add(velocity);
+
+    // Camera follows the character
+    camera.position.set(character.position.x, character.position.y + 5, character.position.z + 10);
+    camera.lookAt(character.position);
 
     renderer.render(scene, camera);
 }
