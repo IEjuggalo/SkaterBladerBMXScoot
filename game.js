@@ -5,24 +5,66 @@ const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// Create a simple skate object
-const geometry = new THREE.BoxGeometry(1, 0.1, 3);
-const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const skate = new THREE.Mesh(geometry, material);
-scene.add(skate);
+// Load 3D models using GLTFLoader
+const loader = new THREE.GLTFLoader();
 
-// Create a simple character model
-const charGeometry = new THREE.BoxGeometry(1, 2, 1);
-const charMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-const character = new THREE.Mesh(charGeometry, charMaterial);
-scene.add(character);
+let character, skateboard, bmxBike, scooter, aggressiveInline;
+
+// Load character model
+loader.load('models/character.glb', function(gltf) {
+    character = gltf.scene;
+    character.scale.set(1, 1, 1);
+    scene.add(character);
+    // Add the skateboard to the character by default
+    loadSkateboard();
+});
+
+// Load skateboard model
+function loadSkateboard() {
+    loader.load('models/skateboard.glb', function(gltf) {
+        skateboard = gltf.scene;
+        skateboard.scale.set(1, 1, 1);
+        character.add(skateboard);
+        skateboard.position.set(0, -1, 0);
+    });
+}
+
+// Load BMX bike model
+function loadBmxBike() {
+    loader.load('models/bmxBike.glb', function(gltf) {
+        bmxBike = gltf.scene;
+        bmxBike.scale.set(1, 1, 1);
+        character.add(bmxBike);
+        bmxBike.position.set(0, -1, 0);
+    });
+}
+
+// Load scooter model
+function loadScooter() {
+    loader.load('models/scooterCharacter.glb', function(gltf) {
+        scooter = gltf.scene;
+        scooter.scale.set(1, 1, 1);
+        scene.add(scooter);
+        scooter.position.set(0, 1, 0);
+    });
+}
+
+// Load aggressive inline model
+function loadAggressiveInline() {
+    loader.load('models/aggressiveInline.glb', function(gltf) {
+        aggressiveInline = gltf.scene;
+        aggressiveInline.scale.set(1, 1, 1);
+        character.add(aggressiveInline);
+        aggressiveInline.position.set(0, -1, 0);
+    });
+}
 
 // Position the character
 character.position.y = 1;
 
-// Adjust camera to top-down view
-camera.position.set(0, 10, 0);
-camera.lookAt(0, 0, 0);
+// Adjust camera to follow the character
+camera.position.set(0, 5, -10);
+camera.lookAt(character.position);
 
 // Create an infinite floor
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
@@ -31,28 +73,101 @@ const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = Math.PI / 2;
 scene.add(floor);
 
+let velocity = new THREE.Vector3(0, 0, 0);
+const acceleration = 0.01;
+const friction = 0.98;
+let isJumping = false;
+
 // Add event listener for user controls and camera controls
 document.addEventListener('keydown', onDocumentKeyDown, false);
+document.addEventListener('keyup', onDocumentKeyUp, false);
+document.addEventListener('mousemove', onDocumentMouseMove, false);
+
 function onDocumentKeyDown(event) {
     var keyCode = event.which;
-    // Character controls
+    // Apply force based on key press
     if (keyCode == 87) {
-        character.position.z -= 0.1; // W key
+        velocity.z -= acceleration; // W key
     } else if (keyCode == 83) {
-        character.position.z += 0.1; // S key
+        velocity.z += acceleration; // S key
     } else if (keyCode == 65) {
-        character.position.x -= 0.1; // A key
+        velocity.x -= acceleration; // A key
     } else if (keyCode == 68) {
-        character.position.x += 0.1; // D key
+        velocity.x += acceleration; // D key
+    } else if (keyCode == 32 && !isJumping) { // Space key for jump
+        velocity.y += 0.2;
+        isJumping = true;
     }
-    // Camera follows the character
-    camera.position.set(character.position.x, 10, character.position.z);
-    camera.lookAt(character.position);
+}
+
+function onDocumentKeyUp(event) {
+    var keyCode = event.which;
+    if (keyCode == 32) { // Space key
+        isJumping = false;
+    }
+}
+
+function onDocumentMouseMove(event) {
+    // Implement mouse movement for tricks
+    // Example: Rotate character based on mouse movement
+    character.rotation.y = (event.clientX / window.innerWidth) * 2 * Math.PI;
+}
+
+// Functions to switch vehicles
+function switchToSkateboard() {
+    character.remove(skateboard);
+    character.remove(bmxBike);
+    character.remove(scooter);
+    character.remove(aggressiveInline);
+    loadSkateboard();
+}
+
+function switchToBmxBike() {
+    character.remove(skateboard);
+    character.remove(bmxBike);
+    character.remove(scooter);
+    character.remove(aggressiveInline);
+    loadBmxBike();
+}
+
+function switchToScooter() {
+    character.remove(skateboard);
+    character.remove(bmxBike);
+    character.remove(scooter);
+    character.remove(aggressiveInline);
+    loadScooter();
+}
+
+function switchToAggressiveInline() {
+    character.remove(skateboard);
+    character.remove(bmxBike);
+    character.remove(scooter);
+    character.remove(aggressiveInline);
+    loadAggressiveInline();
 }
 
 // Animation loop
 function animate() {
     requestAnimationFrame(animate);
+
+    // Apply friction
+    velocity.multiplyScalar(friction);
+
+    // Apply gravity
+    if (character.position.y > 1) {
+        velocity.y -= 0.01;
+    } else {
+        velocity.y = 0;
+        character.position.y = 1;
+    }
+
+    // Update character position
+    character.position.add(velocity);
+
+    // Camera follows the character
+    camera.position.set(character.position.x, character.position.y + 5, character.position.z - 10);
+    camera.lookAt(character.position);
+
     renderer.render(scene, camera);
 }
 animate();

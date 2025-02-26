@@ -11,6 +11,23 @@
 </head>
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="game.js"></script>
+    <script>
+        // Get the mode from the URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+
+        // Load the appropriate mode
+        if (mode === 'skateboard') {
+            switchToSkateboard();
+        } else if (mode === 'bmx') {
+            switchToBmxBike();
+        } else if (mode === 'scooter') {
+            switchToScooter();
+        } else if (mode === 'inline') {
+            switchToAggressiveInline();
+        }
+    </script>
 </body>
 </html>
