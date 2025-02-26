@@ -11,13 +11,14 @@ const loader = new THREE.GLTFLoader();
 let character, skateboard, bmxBike, scooter, aggressiveInline;
 
 // Load character model
-loader.load('models/character.glb', function(gltf) {
-    character = gltf.scene;
-    character.scale.set(1, 1, 1);
-    scene.add(character);
-    // Add the skateboard to the character by default
-    loadSkateboard();
-});
+function loadCharacter(callback) {
+    loader.load('models/character.glb', function(gltf) {
+        character = gltf.scene;
+        character.scale.set(1, 1, 1);
+        scene.add(character);
+        callback();
+    });
+}
 
 // Load skateboard model
 function loadSkateboard() {
@@ -60,11 +61,13 @@ function loadAggressiveInline() {
 }
 
 // Position the character
-character.position.y = 1;
+function positionCharacter() {
+    character.position.y = 1;
+}
 
 // Adjust camera to follow the character
 camera.position.set(0, 5, -10);
-camera.lookAt(character.position);
+camera.lookAt(0, 0, 0);
 
 // Create an infinite floor
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000);
@@ -115,35 +118,43 @@ function onDocumentMouseMove(event) {
 
 // Functions to switch vehicles
 function switchToSkateboard() {
-    character.remove(skateboard);
-    character.remove(bmxBike);
-    character.remove(scooter);
-    character.remove(aggressiveInline);
-    loadSkateboard();
+    if (character) {
+        character.remove(skateboard);
+        character.remove(bmxBike);
+        character.remove(scooter);
+        character.remove(aggressiveInline);
+        loadSkateboard();
+    }
 }
 
 function switchToBmxBike() {
-    character.remove(skateboard);
-    character.remove(bmxBike);
-    character.remove(scooter);
-    character.remove(aggressiveInline);
-    loadBmxBike();
+    if (character) {
+        character.remove(skateboard);
+        character.remove(bmxBike);
+        character.remove(scooter);
+        character.remove(aggressiveInline);
+        loadBmxBike();
+    }
 }
 
 function switchToScooter() {
-    character.remove(skateboard);
-    character.remove(bmxBike);
-    character.remove(scooter);
-    character.remove(aggressiveInline);
-    loadScooter();
+    if (character) {
+        character.remove(skateboard);
+        character.remove(bmxBike);
+        character.remove(scooter);
+        character.remove(aggressiveInline);
+        loadScooter();
+    }
 }
 
 function switchToAggressiveInline() {
-    character.remove(skateboard);
-    character.remove(bmxBike);
-    character.remove(scooter);
-    character.remove(aggressiveInline);
-    loadAggressiveInline();
+    if (character) {
+        character.remove(skateboard);
+        character.remove(bmxBike);
+        character.remove(scooter);
+        character.remove(aggressiveInline);
+        loadAggressiveInline();
+    }
 }
 
 // Animation loop
@@ -154,20 +165,39 @@ function animate() {
     velocity.multiplyScalar(friction);
 
     // Apply gravity
-    if (character.position.y > 1) {
+    if (character && character.position.y > 1) {
         velocity.y -= 0.01;
-    } else {
+    } else if (character) {
         velocity.y = 0;
         character.position.y = 1;
     }
 
     // Update character position
-    character.position.add(velocity);
+    if (character) {
+        character.position.add(velocity);
 
-    // Camera follows the character
-    camera.position.set(character.position.x, character.position.y + 5, character.position.z - 10);
-    camera.lookAt(character.position);
+        // Camera follows the character
+        camera.position.set(character.position.x, character.position.y + 5, character.position.z - 10);
+        camera.lookAt(character.position);
+    }
 
     renderer.render(scene, camera);
 }
 animate();
+
+// Load the character and then switch to the default mode
+loadCharacter(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+
+    // Load the appropriate mode
+    if (mode === 'skateboard') {
+        switchToSkateboard();
+    } else if (mode === 'bmx') {
+        switchToBmxBike();
+    } else if (mode === 'scooter') {
+        switchToScooter();
+    } else if (mode === 'inline') {
+        switchToAggressiveInline();
+    }
+});
